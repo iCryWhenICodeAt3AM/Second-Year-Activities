@@ -10,8 +10,14 @@ public class newCalculatorTestV1 {
 
     public static void performOperation(char o){
         double x, y, result = 0;
+        //new added
+        boolean isNegative=false;
         
         y = numberStack.pop();
+        
+        if(numberStack.peek()<1){
+            isNegative = true;
+        }
         x = numberStack.pop();
         if (o == '*'){
             result = x*y;
@@ -23,15 +29,20 @@ public class newCalculatorTestV1 {
             result = x-y;
         } else if (o == '^'){
             result = Math.pow(x, y);
+            if (isNegative==true) {
+                result *= -1;
+            }
         }
         numberStack.push(result);
     }
 
     public static int precedenceChecker(char i){
-        if ( i == '*' || i == '/' || i == '^') {
+        if ( i == '*' || i == '/') {
             return 2;
         } else if ( i == '+' || i == '-' ){
             return 1;
+        }  else if ( i == '^' ){
+            return 3;
         } else {
             return 0;
         }
@@ -50,41 +61,67 @@ public class newCalculatorTestV1 {
     public static void splitInput(String i){ //void method for the input splitting and doing the appropriate operation at the same time
         char[] split = i.toCharArray();
         for (char c : split) {
+            System.out.println("c="+c);
             if (numberCheck(c)){
                 builder += c;
                 System.out.println(builder);
                 key = false;
+                System.out.println("key is "+key);
             } else if (operatorCheck(c) && key == false){
-                numberStack.push(Double.parseDouble(builder));
-                builder = "";
+                System.out.println("c is operator");
+                System.out.println("builder is = " + builder);
+                if (!builder.isEmpty()) {
+                    numberStack.push(Double.parseDouble(builder));
+                    builder = "";
+                    System.out.println("number stack after builder pass: "+numberStack);
+                    System.out.println("operator stack after builder pass: "+operatorStack);
+                }   
                 key = true;
-                if (operatorStack.isEmpty() || precedenceChecker(c) > precedenceChecker(operatorStack.peek())){
+                System.out.println("c is operator "+c);
+                if (operatorStack.isEmpty()) {
+                    operatorStack.push(c);
+                } else if (precedenceChecker(c) > precedenceChecker(operatorStack.peek())){
+                    System.out.println("c in precedence is "+precedenceChecker(c));
+                    System.out.println("top element in precedence is "+precedenceChecker(operatorStack.peek()));
+                    System.out.println("c is " + c + " and " + " top of operator is " + operatorStack.peek() + ". Therefore, c is greater than or equal to top element");
                     operatorStack.push(c);
                     System.out.println(operatorStack);
                     System.out.println(numberStack);
                 } else {
-                    System.out.println(c);
-                    while(!operatorStack.isEmpty() && precedenceChecker(c) <= precedenceChecker(operatorStack.peek())){
+                    //System.out.println(c);
+                    while(!operatorStack.isEmpty() && precedenceChecker(c) <= precedenceChecker(operatorStack.peek()) || precedenceChecker(c)==3){
+                        System.out.println("c is " + c + " and " + " top of operator is " + operatorStack.peek());
                         System.out.println(operatorStack);
                         performOperation(operatorStack.pop());
                     }
                     operatorStack.push(c);
                 }
                  
-                System.out.println(operatorStack);
             } else if (c == '(') {
                 operatorStack.push(c);
             } else if (c == ')'){
-                numberStack.push(Double.parseDouble(builder));
-                builder = "";
-                while (operatorCheck(operatorStack.peek())) {
-                    performOperation(operatorStack.pop());
+                if(!builder.equals("")){
+                    numberStack.push(Double.parseDouble(builder));
+                    builder = "";
                 }
-                if(operatorStack.peek().equals('(')){
+                while (operatorCheck(operatorStack.peek())&&!operatorStack.peek().equals('(')) {
+                    performOperation(operatorStack.pop());
+                    System.out.println("OHh"+operatorStack);
+                    System.out.println(numberStack);
+                }
+                if(operatorStack.peek()=='('){
+                    System.out.println("limme pop \'realquick\'");
                     operatorStack.pop();
+                    System.out.println("OHH"+operatorStack);
+                    System.out.println(numberStack);
+                    //sample additional code
+                    while (!operatorStack.empty()&&operatorStack.peek()=='*') {
+                        performOperation(operatorStack.pop());
+                    }
                 }
             } 
         }
+        System.out.println("yugs");
         if (!builder.isEmpty()) {
             numberStack.push(Double.parseDouble(builder));
         }
@@ -92,13 +129,16 @@ public class newCalculatorTestV1 {
         System.out.println(operatorStack);
         while (!operatorStack.isEmpty()) {
             //possible error producer
-            if (operatorStack.peek()=='('){
+            System.out.println("OS:"+operatorStack);
+            System.out.println("NS:"+numberStack);
+            if (operatorCheck(operatorStack.peek())){
+                performOperation(operatorStack.pop());
+            } else if (operatorStack.peek()=='('){
                 operatorStack.pop();
-            }
-            performOperation(operatorStack.pop());
+            } 
+            
         }
         System.out.println("Result: " + numberStack);
-        
     }
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
